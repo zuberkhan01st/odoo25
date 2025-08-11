@@ -1,78 +1,44 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema } from "mongoose";
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-  password?: string;
-  avatar?: string;
-  password_reset_token?: string;
-  magic_link_token?: string;
-  magic_link_sent_at?: Date;
-  skillLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
-  preferredPlayTimes?: string[];
-  favoriteSports?: string[];
-  location?: {
-    city?: string;
-    area?: string;
-    coordinates?: {
-      lat?: number;
-      lng?: number;
-    };
-  };
-}
-
-const userSchema: Schema<IUser> = new Schema({
+const userSchema = new Schema({
   name: {
-    type: String,
-    required: [true, 'Name field is required.'],
-    minLength: [2, 'Name must be 2 character long.'],
+    required: [true, "Name field is required."],
+    minLength: [2, "Name must be 2 character long."],
+    type: Schema.Types.String,
   },
+
   email: {
-    type: String,
-    required: [true, 'Email field is required.'],
+    required: [true, "Email field is required."],
+    type: Schema.Types.String,
     unique: true,
+    trim: true,
   },
   password: {
-    type: String,
+    type: Schema.Types.String,
   },
-  avatar: {
-    type: String,
+  avtar: {
     required: false,
+    type: Schema.Types.String,
+  },
+  role: {
+    required: true,
+    type: Schema.Types.String,
+    default: "User",
   },
   password_reset_token: {
-    type: String,
     required: false,
+    type: Schema.Types.String,
     trim: true,
   },
   magic_link_token: {
-    type: String,
     required: false,
+    type: Schema.Types.String,
     trim: true,
   },
   magic_link_sent_at: {
-    type: Date,
     required: false,
+    type: Schema.Types.Date,
   },
-  skillLevel: {
-    type: String,
-    enum: ['Beginner', 'Intermediate', 'Advanced'],
-    default: 'Beginner'
-  },
-  preferredPlayTimes: [{
-    type: String
-  }],
-  favoriteSports: [{
-    type: String,
-    trim: true
-  }],
-  location: {
-    city: { type: String, trim: true },
-    area: { type: String, trim: true },
-    coordinates: {
-      lat: { type: Number },
-      lng: { type: Number }
-    }
-  }
-}, { timestamps: true });
+});
 
-export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+export const User = mongoose.models.User || mongoose.model("User", userSchema);
