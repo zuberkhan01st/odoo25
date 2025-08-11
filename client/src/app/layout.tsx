@@ -1,4 +1,4 @@
-import "./globals.css";
+import "../styles/globals.css";
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import NextAuthSessionProvider from "./provider/sessionProvider";
