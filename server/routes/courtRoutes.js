@@ -1,10 +1,11 @@
-const express = require('express');
+
+import express from 'express';
+import { getCourtsByVenue, getCourtById } from '../controllers/courtController.js';
 const router = express.Router();
-const courtController = require('../controllers/courtController');
 
 // Get all courts for a venue
-router.get('/venue/:venueId', courtController.getCourtsByVenue);
 // Get single court
-router.get('/:id', courtController.getCourtById);
+router.get('/venue/:venueId', getCourtsByVenue);
+router.get('/:id', getCourtById);
 
-module.exports = router;
+export default router;

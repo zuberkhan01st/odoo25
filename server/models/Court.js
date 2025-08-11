@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const courtSchema = new mongoose.Schema({
   venue: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue', required: true },
@@ -14,4 +14,5 @@ const courtSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Court', courtSchema);
+const Court = mongoose.model('Court', courtSchema);
+export default Court;

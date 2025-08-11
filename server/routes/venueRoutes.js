@@ -1,9 +1,10 @@
-const express = require('express');
+
+import express from 'express';
+import { getVenues, getVenueById } from '../controllers/venueController.js';
 const router = express.Router();
-const venueController = require('../controllers/venueController');
 
 // List all approved venues, search, filter, get single venue
-router.get('/', venueController.getVenues); // ?search=, ?sportType=, ?priceMin=, ?priceMax=, ?rating=
-router.get('/:id', venueController.getVenueById);
+router.get('/', getVenues); // ?search=, ?sportType=, ?priceMin=, ?priceMax=, ?rating=
+router.get('/:id', getVenueById);
 
-module.exports = router;
+export default router;

@@ -1,10 +1,10 @@
-const express = require('express');
+
+import express from 'express';
+import { createReview, getVenueReviews } from '../controllers/reviewController.js';
 const router = express.Router();
-const reviewController = require('../controllers/reviewController');
 
 // Create a review
-router.post('/', reviewController.createReview);
-// Get reviews for a venue
-router.get('/venue/:venueId', reviewController.getVenueReviews);
+router.post('/', createReview);
+router.get('/venue/:venueId', getVenueReviews);
 
-module.exports = router;
+export default router;

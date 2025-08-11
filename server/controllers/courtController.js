@@ -1,7 +1,7 @@
-const Court = require('../models/Court');
+import Court from '../models/Court.js';
 
 // Create a new court
-exports.createCourt = async (req, res) => {
+export const createCourt = async (req, res) => {
   try {
     const court = new Court(req.body);
     await court.save();
@@ -12,7 +12,7 @@ exports.createCourt = async (req, res) => {
 };
 
 // Get all courts for a venue
-exports.getCourtsByVenue = async (req, res) => {
+export const getCourtsByVenue = async (req, res) => {
   try {
     const courts = await Court.find({ venue: req.params.venueId });
     res.json(courts);
@@ -22,7 +22,7 @@ exports.getCourtsByVenue = async (req, res) => {
 };
 
 // Get single court by ID
-exports.getCourtById = async (req, res) => {
+export const getCourtById = async (req, res) => {
   try {
     const court = await Court.findById(req.params.id);
     if (!court) return res.status(404).json({ error: 'Court not found' });
@@ -33,7 +33,7 @@ exports.getCourtById = async (req, res) => {
 };
 
 // Update court
-exports.updateCourt = async (req, res) => {
+export const updateCourt = async (req, res) => {
   try {
     const court = await Court.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!court) return res.status(404).json({ error: 'Court not found' });
@@ -44,7 +44,7 @@ exports.updateCourt = async (req, res) => {
 };
 
 // Delete court
-exports.deleteCourt = async (req, res) => {
+export const deleteCourt = async (req, res) => {
   try {
     const court = await Court.findByIdAndDelete(req.params.id);
     if (!court) return res.status(404).json({ error: 'Court not found' });
@@ -53,3 +53,5 @@ exports.deleteCourt = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+

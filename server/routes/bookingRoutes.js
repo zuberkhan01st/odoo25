@@ -1,12 +1,11 @@
-const express = require('express');
+
+import express from 'express';
+import { createBooking, getUserBookings, cancelBooking } from '../controllers/bookingController.js';
 const router = express.Router();
-const bookingController = require('../controllers/bookingController');
 
 // Book a court
-router.post('/', bookingController.createBooking);
-// Get user's bookings
-router.get('/my', bookingController.getUserBookings);
-// Cancel a booking
-router.patch('/:id/cancel', bookingController.cancelBooking);
+router.post('/', createBooking);
+router.get('/my', getUserBookings);
+router.patch('/:id/cancel', cancelBooking);
 
-module.exports = router;
+export default router;

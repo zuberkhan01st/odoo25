@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const venueSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -14,4 +14,5 @@ const venueSchema = new mongoose.Schema({
   reviewsCount: { type: Number, default: 0 }
 });
 
-module.exports = mongoose.model('Venue', venueSchema);
+const Venue = mongoose.model('Venue', venueSchema);
+export default Venue;

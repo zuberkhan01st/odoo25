@@ -1,8 +1,8 @@
-const Booking = require('../models/Booking');
-const Court = require('../models/Court');
+import Booking from '../models/Booking.js';
+import Court from '../models/Court.js';
 
 // Create a new booking
-exports.createBooking = async (req, res) => {
+export const createBooking = async (req, res) => {
   try {
     // Prevent double booking
     const exists = await Booking.findOne({
@@ -22,7 +22,7 @@ exports.createBooking = async (req, res) => {
 };
 
 // Get bookings for a user
-exports.getUserBookings = async (req, res) => {
+export const getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id })
       .populate('venue', 'name')
@@ -34,7 +34,7 @@ exports.getUserBookings = async (req, res) => {
 };
 
 // Cancel a booking
-exports.cancelBooking = async (req, res) => {
+export const cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id, status: 'confirmed' },

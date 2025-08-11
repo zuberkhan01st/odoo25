@@ -1,7 +1,7 @@
-const Review = require('../models/Review');
+import Review from '../models/Review.js';
 
 // Create a review
-exports.createReview = async (req, res) => {
+export const createReview = async (req, res) => {
   try {
     const review = new Review({ ...req.body, user: req.user._id });
     await review.save();
@@ -12,7 +12,7 @@ exports.createReview = async (req, res) => {
 };
 
 // Get reviews for a venue
-exports.getVenueReviews = async (req, res) => {
+export const getVenueReviews = async (req, res) => {
   try {
     const reviews = await Review.find({ venue: req.params.venueId })
       .populate('user', 'fullName avatar');
