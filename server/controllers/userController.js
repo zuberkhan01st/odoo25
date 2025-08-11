@@ -284,3 +284,30 @@ export const updateUserProfile = async (req, res) => {
 	}
 };
 
+import { getGroqRecommendations as groqRecommend } from '../services/groqService.js';
+// AI-based personalized recommendations using Groq LLM
+export const getAIRecommendations = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		// Fetch user's previous bookings
+		const bookings = await Booking.find({ user: userId }).populate('court');
+		const bookingHistory = bookings.map(b => ({
+			date: b.date,
+			sportType: b.court?.sportType,
+			timeSlot: b.timeSlot,
+			venue: b.venue,
+		}));
+
+		// Current booking request (if any)
+		const current = req.body || {};
+
+		// Enhanced, user-friendly prompt
+		const prompt = `You are a smart sports booking assistant.\n\nHere is the user's booking history:\n${bookingHistory.map((b, i) => `#${i+1}: Sport: ${b.sportType}, Date: ${b.date}, Time: ${b.timeSlot}`).join('\n')}\n\nCurrent booking request: ${JSON.stringify(current)}\n\nBased on the user's history and current request, suggest 2-3 personalized recommendations for sports, courts, or time slots that would best suit the user's preferences and habits. Explain your reasoning in 1-2 sentences.`;
+
+		// Call Groq LLM
+		const recommendation = await groqRecommend({ body: { prompt } }, { send: false });
+		res.json({ recommendation });
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
