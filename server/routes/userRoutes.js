@@ -22,21 +22,21 @@ router.get('/profile',protect, getUserProfile);
 router.put('/profile', protect,updateUserProfile);
 
 // User insights
-router.get('/insights', getUserInsights);
+router.get('/insights',protect, getUserInsights);
 
 // Facilities (venues)
-router.get('/facilities', getAllFacilities);
-router.get('/facilities/:id', getFacilityById);
-router.get('/facilities/:venueId/courts', getCourtsByFacility);
+router.get('/facilities',protect, getAllFacilities);
+router.get('/facilities/:id',protect, getFacilityById);
+router.get('/facilities/:venueId/courts',protect, getCourtsByFacility);
 
 // Courts
-router.get('/courts', getAllCourts); // all courts
-router.get('/courts/category', getCourtsByCategory); // courts by category (sportType)
-router.get('/courts/search', findCourtsBySportCategory); // courts by sportType (query)
-router.get('/courts/venue/:venueId', findCourtsWithinVenue); // courts within a venue
+router.get('/courts',protect, getAllCourts); // all courts
+router.get('/courts/category',protect, getCourtsByCategory); // courts by category (sportType)
+router.get('/courts/search',protect, findCourtsBySportCategory); // courts by sportType (query)
+router.get('/courts/venue/:venueId',protect, findCourtsWithinVenue); // courts within a venue
 
 // Bookings
-router.get('/bookings', getUserBookings);
-router.get('/bookings/:id', getBookingById);
+router.get('/bookings',protect, getUserBookings);
+router.get('/bookings/:id',protect, getBookingById);
 
 export default router;

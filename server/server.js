@@ -39,7 +39,7 @@ app.use(cors({ origin: allowedOrigin, credentials: true }));
 connectDB();
 
 // Routes
-app.get('/', async (req,res)=>{
+app.use('/', async (req,res)=>{
   return res.status(200).json({message: "Server is working fine!"})
 })
 
