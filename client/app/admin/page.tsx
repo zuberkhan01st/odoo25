@@ -5,22 +5,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ResponsiveContainer, Line, LineChart, CartesianGrid, XAxis, YAxis, Bar, BarChart } from "recharts"
 import { DollarSign, TicketCheck, Building2, Loader } from "lucide-react"
+import { useEffect, useState } from "react"
 
-const kpis = [
-  { title: "Total Venues", value: "128", icon: Building2 },
-  { title: "Total Bookings", value: "12,842", icon: TicketCheck },
-  { title: "Pending Approvals", value: "7", icon: Loader },
-  { title: "Total Revenue", value: "$182k", icon: DollarSign },
-]
-
-const bookings = Array.from({ length: 12 }).map((_, i) => ({
-  month: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][i],
-  count: Math.round(300 + Math.random() * 200),
-}))
+interface DashboardStats {
+  totalVenues: number
+  totalBookings: number
+  pendingApprovals: number
+  totalRevenue: number
+  bookingsOverTime: { month: string; count: number }[]
+  monthlyRevenue: { month: string; revenue: number }[]
+}
 
 export default function Page() {
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/dashboard", {
+      headers: {
+        Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("adminToken") : ""}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setStats(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Failed to fetch dashboard stats")
+        setLoading(false)
+      })
+  }, [])
+
+  const kpis = [
+    { title: "Total Venues", value: stats?.totalVenues ?? 0, icon: Building2 },
+    { title: "Total Bookings", value: stats?.totalBookings ?? 0, icon: TicketCheck },
+    { title: "Pending Approvals", value: stats?.pendingApprovals ?? 0, icon: Loader },
+    { title: "Total Revenue", value: `₹${stats?.totalRevenue?.toLocaleString() ?? 0}`, icon: DollarSign },
+  ]
+
+  const bookings = stats?.bookingsOverTime ?? []
+  const monthlyRevenue = stats?.monthlyRevenue ?? []
+
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
+      {loading && <div>Loading dashboard...</div>}
+      {error && <div className="text-red-500">{error}</div>}
       <div className="grid gap-4 md:grid-cols-4">
         {kpis.map((k, idx) => (
           <motion.div
@@ -76,7 +107,7 @@ export default function Page() {
             className="h-[280px]"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={bookings.map((b) => ({ month: b.month, revenue: b.count * 12 }))}>
+              <BarChart data={monthlyRevenue}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />

@@ -6,8 +6,33 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
 
 export default function Page() {
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/profile", {
+      headers: {
+        Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("adminToken") : ""}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setProfile(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Failed to fetch profile")
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>{error}</div>
+
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
       <Card>
@@ -17,11 +42,11 @@ export default function Page() {
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
             <Label>Name</Label>
-            <Input placeholder="Admin Name" />
+            <Input placeholder="Admin Name" value={profile.name} />
           </div>
           <div className="grid gap-2">
             <Label>Email</Label>
-            <Input type="email" placeholder="admin@example.com" />
+            <Input type="email" placeholder="admin@example.com" value={profile.email} />
           </div>
           <div className="grid gap-2 md:col-span-2">
             <Label>New password</Label>
@@ -29,7 +54,9 @@ export default function Page() {
           </div>
         </CardContent>
         <CardFooter className="justify-end">
-          <Button className="bg-emerald-600 shadow-[0_0_0_2px_rgba(16,185,129,0.2)] hover:bg-emerald-700">Save</Button>
+          <Button className="bg-emerald-600 shadow-[0_0_0_2px_rgba(16,185,129,0.2)] hover:bg-emerald-700">
+            Save
+          </Button>
         </CardFooter>
       </Card>
 

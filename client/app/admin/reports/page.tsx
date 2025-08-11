@@ -17,7 +17,7 @@ import {
   Cell,
 } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 const revenue = months.map((m, i) => ({
@@ -37,6 +37,27 @@ const colors = ["#10b981", "#a3a3a3", "#22c55e", "#525252"]
 export default function Page() {
   const [sport, setSport] = useState("all")
   const [range, setRange] = useState("6m")
+  const [reports, setReports] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/reports", {
+      headers: {
+        Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("adminToken") : ""}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setReports(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Failed to fetch reports")
+        setLoading(false)
+      })
+  }, [])
+
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
       <div className="flex flex-wrap gap-3">
