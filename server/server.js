@@ -15,6 +15,7 @@ import userRoutes from './routes/userRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import ownerRoutes from './routes/ownerRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -48,6 +49,9 @@ app.use('/api/auth', authRoutes);
 
 // Owner protected routes
 app.use('/api/owner', ownerRoutes);
+
+// Admin protected routes
+app.use('/api/admin', adminRoutes);
 
 // User-facing routes
 app.use('/api/venues', venueRoutes);

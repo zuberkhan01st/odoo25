@@ -220,7 +220,7 @@ export const takeActionOnReport = async (req, res) => {
 // Admin Profile
 export const getAdminProfile = async (req, res) => {
 	try {
-		const admin = await Admin.findById(req.user.id).select('-password');
+		const admin = await Admin.findById(req.user._id).select('-password');
 		if (!admin) return res.status(404).json({ error: 'Admin not found' });
 		res.json(admin);
 	} catch (err) {
