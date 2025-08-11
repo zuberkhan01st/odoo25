@@ -1,6 +1,7 @@
 import Booking from '../models/Booking.js';
 import Court from '../models/Court.js';
 
+
 // Create a new booking
 export const createBooking = async (req, res) => {
   try {
@@ -18,6 +19,22 @@ export const createBooking = async (req, res) => {
     res.status(201).json(booking);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+export const createPaymentOrder = async (req, res) => {
+  try {
+    const { amount, currency = 'INR', receipt } = req.body;
+    const options = {
+      amount: amount * 100, // amount in paise
+      currency,
+      receipt,
+      payment_capture: 1,
+    };
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 

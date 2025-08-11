@@ -1,5 +1,12 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import Owner from '../models/Owner.js';
+import Venue from '../models/Venue.js';
+import Court from '../models/Court.js';
+import Booking from '../models/Booking.js';
+import Admin from '../models/Admin.js';
+import Review from '../models/Review.js';
 // Admin Signup
 export const adminSignup = async (req, res) => {
 	try {
@@ -32,13 +39,7 @@ export const adminLogin = async (req, res) => {
 		res.status(400).json({ error: err.message });
 	}
 };
-import User from '../models/User.js';
-import Owner from '../models/Owner.js';
-import Venue from '../models/Venue.js';
-import Court from '../models/Court.js';
-import Booking from '../models/Booking.js';
-import Admin from '../models/Admin.js';
-import Review from '../models/Review.js';
+
 
 // Dashboard: Global stats, trends, earnings, activity
 export const getDashboardStats = async (req, res) => {
@@ -206,8 +207,7 @@ export const getUserBookingHistory = async (req, res) => {
 	}
 };
 
-// Reports & Moderation (Optional)
-// Placeholder: implement if you add a Report model
+
 export const getReports = async (req, res) => {
 	res.json([]); // No Report model yet
 };

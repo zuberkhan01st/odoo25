@@ -65,6 +65,10 @@ app.use('/api', aiRoutes);
 // Health
 app.get('/health', (req, res) => res.json({ ok: true }));
 
+app.use('/', (req,res)=>{
+  res.status(200).json({message:"Wo"})
+})
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err);
