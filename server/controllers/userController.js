@@ -239,7 +239,7 @@ export const getUserInsights = async (req, res) => {
 			confirm: 324,
 		};
 
-		// Activity heatmap (dummy data for now)
+		
 		const heatmap = [
 			{ day: 'Mon', bookings: 40 },
 			{ day: 'Tue', bookings: 50 },
@@ -284,3 +284,141 @@ export const updateUserProfile = async (req, res) => {
 	}
 };
 
+import { getGroqRecommendations as groqRecommend } from '../services/groqService.js';
+// AI-based personalized recommendations using Groq LLM
+export const getAIRecommendations = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		// Fetch user's previous bookings
+		const bookings = await Booking.find({ user: userId }).populate('court');
+		const bookingHistory = bookings.map(b => ({
+			date: b.date,
+			sportType: b.court?.sportType,
+			timeSlot: b.timeSlot,
+			venue: b.venue,
+		}));
+
+		// Current booking request (if any)
+		const current = req.body || {};
+
+		// Enhanced, user-friendly prompt
+		const prompt = `You are a smart sports booking assistant.\n\nHere is the user's booking history:\n${bookingHistory.map((b, i) => `#${i+1}: Sport: ${b.sportType}, Date: ${b.date}, Time: ${b.timeSlot}`).join('\n')}\n\nCurrent booking request: ${JSON.stringify(current)}\n\nBased on the user's history and current request, suggest 2-3 personalized recommendations for sports, courts, or time slots that would best suit the user's preferences and habits. Explain your reasoning in 1-2 sentences.`;
+
+		// Call Groq LLM
+		const recommendation = await groqRecommend({ body: { prompt } }, { send: false });
+		res.json({ recommendation });
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
+
+// Add or remove a favorite venue/court for the user
+export const toggleFavorite = async (req, res) => {
+	try {
+		const { type, id } = req.body; 
+		if (!['venue', 'court'].includes(type)) return res.status(400).json({ error: 'Invalid type' });
+		const user = await User.findById(req.user.id);
+		if (!user) return res.status(404).json({ error: 'User not found' });
+		user.favorites = user.favorites || { venues: [], courts: [] };
+		const favArr = type === 'venue' ? user.favorites.venues : user.favorites.courts;
+		const idx = favArr.indexOf(id);
+		if (idx === -1) {
+			favArr.push(id);
+		} else {
+			favArr.splice(idx, 1);
+		}
+		await user.save();
+		res.json({ favorites: user.favorites });
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
+};
+
+// Get user's favorite venues/courts
+export const getFavorites = async (req, res) => {
+	try {
+		const user = await User.findById(req.user.id);
+		if (!user) return res.status(404).json({ error: 'User not found' });
+		res.json({ favorites: user.favorites || { venues: [], courts: [] } });
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
+};
+
+import sendEmail from '../services/emailService.js';
+export const createBooking = async (req, res) => {
+	try {
+		const { venue, court, date, timeSlot, price, paymentStatus, paymentMethod, transactionId } = req.body;
+		// Check if slot is already booked
+		const exists = await Booking.findOne({
+			court,
+			date,
+			timeSlot,
+			status: { $in: ['confirmed', 'completed'] }
+		});
+		if (exists) return res.status(400).json({ error: 'Time slot already booked' });
+
+		// Create booking
+		const booking = new Booking({
+			user: req.user.id,
+			venue,
+			court,
+			date,
+			timeSlot,
+			price,
+			paymentStatus: paymentStatus || 'pending',
+			paymentMethod,
+			transactionId,
+			status: 'confirmed'
+		});
+		await booking.save();
+
+		// Send email notifications to user and venue
+		const userDoc = await User.findById(req.user.id);
+		const venueDoc = await Venue.findById(venue).populate('owner');
+		const courtDoc = await Court.findById(court);
+		const userEmail = userDoc?.email;
+		const venueEmail = venueDoc?.owner?.email || venueDoc?.email;
+		const bookingDetails = `Venue: ${venueDoc?.name}<br>Court: ${courtDoc?.name}<br>Date: ${date}<br>Time: ${timeSlot}<br>Price: ${price}`;
+
+			if (userEmail) {
+				await sendEmail(
+					userEmail,
+					'Booking Confirmed',
+					`Your booking is confirmed!\n${bookingDetails}`,
+					`<h3>Your booking is confirmed!</h3><p>${bookingDetails}</p>`
+				);
+			}
+			if (venueEmail) {
+				await sendEmail(
+					venueEmail,
+					'New Booking Received',
+					`A new booking has been made.\n${bookingDetails}`,
+					`<h3>New booking received!</h3><p>${bookingDetails}</p>`
+				);
+			}
+
+		res.status(201).json(booking);
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
+};
+
+export const addBookingReview = async (req, res) => {
+	try {
+		const { bookingId, rating, comment } = req.body;
+		const booking = await Booking.findOne({ _id: bookingId, user: req.user.id });
+		if (!booking) return res.status(404).json({ error: 'Booking not found' });
+		const review = new Review({
+			user: req.user.id,
+			venue: booking.venue,
+			booking: bookingId,
+			rating,
+			comment
+		});
+		await review.save();
+		res.status(201).json(review);
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
+};
