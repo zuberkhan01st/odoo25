@@ -1,8 +1,11 @@
-
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
+  favorites: {
+    venues: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Venue' }],
+    courts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Court' }],
+  },
   name: {
     type: String,
     required: [true, 'Name field is required.'],

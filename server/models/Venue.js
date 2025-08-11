@@ -2,7 +2,14 @@ import mongoose from 'mongoose';
 
 const venueSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  location: { type: String, required: true },
+  location: {
+    city: { type: String, trim: true },
+    area: { type: String, trim: true },
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number }
+    }
+  },
   description: { type: String },
   amenities: [{ type: String }],
   photos: [{ type: String }], // URLs or file paths
