@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Create a reusable transporter using SMTP
 const transporter = nodemailer.createTransport({
@@ -11,28 +12,20 @@ const transporter = nodemailer.createTransport({
 });
 
 // Function to send email
-const sendEmail = async (
-    to,
-    subject,
-    text,
-    html
-) => {
+const sendEmail = async (to, subject, text, html) => {
     try {
         const mailOptions = {
-            from: process.env.EMAIL_USER, // Sender address
-            to,                           // Receiver's email address
-            subject,                      // Subject line
-            text,                           // Plain text body
-            html, // HTML content                          
+            from: process.env.EMAIL_USER,
+            to,
+            subject,
+            text,
+            html,
         };
-
-        const info = await transporter.sendMail(mailOptions); // Use the defined transporter here
+        const info = await transporter.sendMail(mailOptions);
         console.log('Email sent: ' + info.response);
     } catch (error) {
         console.error('Error sending email:', error);
     }
 };
 
-
-
-module.exports = sendEmail;
+export default sendEmail;
