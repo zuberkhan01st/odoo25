@@ -6,7 +6,7 @@ const venueSchema = new mongoose.Schema({
   description: { type: String },
   amenities: [{ type: String }],
   photos: [{ type: String }], // URLs or file paths
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', required: true },
   approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   sports: [{ type: String }], // e.g., ['badminton', 'tennis']
   createdAt: { type: Date, default: Date.now },
