@@ -6,11 +6,27 @@ import vine, { errors } from "@vinejs/vine";
 import ErrorReporter from "@/validator/ErrorReporter";
 import bcrypt from "bcryptjs";
 
+// Update UserPayload to include all fields
 interface UserPayload {
   name: string;
   email: string;
   password: string;
-  avtar?: string;
+  password_confirmation?: string;
+  avatar?: string;
+  password_reset_token?: string;
+  magic_link_token?: string;
+  magic_link_sent_at?: string;
+  skillLevel?: "Beginner" | "Intermediate" | "Advanced";
+  preferredPlayTimes?: string[];
+  favoriteSports?: string[];
+  location?: {
+    city?: string;
+    area?: string;
+    coordinates?: {
+      lat?: number;
+      lng?: number;
+    };
+  };
 }
 
 connect();
@@ -20,6 +36,7 @@ export async function POST(request: NextRequest) {
     vine.errorReporter = () => new ErrorReporter();
     const validator = vine.compile(registerSchema);
     const output = await validator.validate(body);
+
     try {
       const user = await User.findOne({ email: output.email });
       if (user) {
@@ -33,10 +50,16 @@ export async function POST(request: NextRequest) {
           { status: 200 }
         );
       } else {
-        // * To Hash the password
+        // Hash the password
         const salt = bcrypt.genSaltSync(10);
         output.password = bcrypt.hashSync(output.password, salt);
-        await User.create(output);
+
+        // Store all fields from output
+        await User.create({
+          ...output,
+          password: output.password, // hashed password
+        });
+
         return NextResponse.json(
           { status: 200, msg: "User Created successfully!" },
           { status: 200 }
