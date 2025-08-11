@@ -6,26 +6,38 @@ import Court from '../models/Court.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// User Signup
+
+// User Signup (supports all User fields)
 export const signup = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email, and password are required' });
-    }
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword });
-    await user.save();
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+	try {
+		const { name, email, password, avatar, skillLevel, preferredPlayTimes, favoriteSports, location } = req.body;
+		if (!name || !email || !password) {
+			return res.status(400).json({ error: 'Name, email, and password are required' });
+		}
+		const existingUser = await User.findOne({ email });
+		if (existingUser) {
+			return res.status(400).json({ error: 'Email already registered' });
+		}
+		const hashedPassword = await bcrypt.hash(password, 10);
+		const user = new User({
+			name,
+			email,
+			password: hashedPassword,
+			avatar,
+			skillLevel,
+			preferredPlayTimes,
+			favoriteSports,
+			location
+		});
+		await user.save();
+		const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+		res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, skillLevel: user.skillLevel, preferredPlayTimes: user.preferredPlayTimes, favoriteSports: user.favoriteSports, location: user.location } });
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
 };
+
+// Dummy Indian user data for backend insertion
 
 // User Login
 export const login = async (req, res) => {
