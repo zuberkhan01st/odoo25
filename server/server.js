@@ -13,6 +13,8 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import ownerRoutes from './routes/ownerRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -39,10 +41,13 @@ app.use(cors({ origin: allowedOrigin, credentials: true }));
 // DB
 connectDB();
 
-// Routes
-app.use('/', async (req,res)=>{
-  return res.status(200).json({message: "Server is working fine!"})
-})
+
+
+// Auth routes
+app.use('/api/auth', authRoutes);
+
+// Owner protected routes
+app.use('/api/owner', ownerRoutes);
 
 // User-facing routes
 app.use('/api/venues', venueRoutes);

@@ -11,7 +11,8 @@ import {
   findCourtsBySportCategory,
   findCourtsWithinVenue,
   getAllCourts,
-  getCourtsByCategory
+  getCourtsByCategory,
+  
 } from '../controllers/userController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -20,6 +21,8 @@ const router = express.Router();
 // User profile
 router.get('/profile',protect, getUserProfile);
 router.put('/profile', protect,updateUserProfile);
+
+
 
 // User insights
 router.get('/insights',protect, getUserInsights);
