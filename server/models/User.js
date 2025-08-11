@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
   name: {
@@ -10,19 +11,13 @@ const userSchema = new Schema({
     type: String,
     required: [true, 'Email field is required.'],
     unique: true,
-    trim: true,
   },
   password: {
     type: String,
   },
-  avtar: {
+  avatar: {
     type: String,
     required: false,
-  },
-  role: {
-    type: String,
-    required: true,
-    default: 'User',
   },
   password_reset_token: {
     type: String,
@@ -38,8 +33,30 @@ const userSchema = new Schema({
     type: Date,
     required: false,
   },
+  skillLevel: {
+    type: String,
+    enum: ['Beginner', 'Intermediate', 'Advanced'],
+    default: 'Beginner'
+  },
+  preferredPlayTimes: [{
+    type: String
+  }],
+  favoriteSports: [{
+    type: String,
+    trim: true
+  }],
+
+  location: {
+    city: { type: String, trim: true },
+    area: { type: String, trim: true },
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number }
+    }
+  }
 }, { timestamps: true });
 
-export default mongoose.models.User || mongoose.model('User', userSchema);
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
+
 
 
