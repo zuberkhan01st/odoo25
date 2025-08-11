@@ -4,10 +4,101 @@ import User from '../models/User.js';
 import Venue from '../models/Venue.js';
 import Court from '../models/Court.js';
 
-//Fetching profile
+// Search for a venue by name or location
+export const searchVenues = async (req, res) => {
+	try {
+		const { q } = req.query;
+		if (!q) return res.status(400).json({ error: 'Search query required' });
+		const venues = await Venue.find({
+			approvalStatus: 'approved',
+			$or: [
+				{ name: { $regex: q, $options: 'i' } },
+				{ location: { $regex: q, $options: 'i' } }
+			]
+		});
+		res.json(venues);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
 
+// Get popular venues (by bookings count)
+export const getPopularVenues = async (req, res) => {
+	try {
+		const venues = await Venue.aggregate([
+			{ $match: { approvalStatus: 'approved' } },
+			{ $lookup: { from: 'bookings', localField: '_id', foreignField: 'venue', as: 'bookings' } },
+			{ $addFields: { bookingsCount: { $size: '$bookings' } } },
+			{ $sort: { bookingsCount: -1 } },
+			{ $limit: 10 }
+		]);
+		res.json(venues);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
 
+// Get popular sports (by bookings count)
+export const getPopularSports = async (req, res) => {
+	try {
+		const sports = await Booking.aggregate([
+			{ $lookup: { from: 'courts', localField: 'court', foreignField: '_id', as: 'court' } },
+			{ $unwind: '$court' },
+			{ $group: { _id: '$court.sportType', count: { $sum: 1 } } },
+			{ $sort: { count: -1 } },
+			{ $limit: 5 }
+		]);
+		res.json(sports);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
 
+// Get venues with filters and pagination
+export const getFilteredVenues = async (req, res) => {
+	try {
+		const { sportType, priceMin, priceMax, venueType, rating, page = 1, limit = 10 } = req.query;
+		const filter = { approvalStatus: 'approved' };
+		if (sportType) filter.sports = sportType;
+		if (venueType) filter.venueType = venueType;
+		if (rating) filter.rating = { $gte: Number(rating) };
+		if (priceMin || priceMax) filter['courts.pricePerHour'] = {};
+		if (priceMin) filter['courts.pricePerHour'].$gte = Number(priceMin);
+		if (priceMax) filter['courts.pricePerHour'].$lte = Number(priceMax);
+
+		const venues = await Venue.find(filter)
+			.skip((page - 1) * limit)
+			.limit(Number(limit));
+		res.json(venues);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
+
+// Cancel a booking (if in the future)
+export const cancelBooking = async (req, res) => {
+	try {
+		const booking = await Booking.findOne({ _id: req.params.id, user: req.user._id, status: 'confirmed' });
+		if (!booking) return res.status(404).json({ error: 'Booking not found or cannot be cancelled' });
+		if (new Date(booking.date) < new Date()) return res.status(400).json({ error: 'Cannot cancel past bookings' });
+		booking.status = 'cancelled';
+		await booking.save();
+		res.json({ message: 'Booking cancelled', booking });
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
+};
+
+// Get reviews for a venue
+export const getVenueReviews = async (req, res) => {
+	try {
+		const reviews = await Review.find({ venue: req.params.venueId })
+			.populate('user', 'name avatar');
+		res.json(reviews);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
 
 //Getting courts
 export const getAllCourts = async (req,res)=>{

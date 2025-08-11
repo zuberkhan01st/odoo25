@@ -24,7 +24,7 @@ export const protect = async (req, res, next) => {
     }
 
     req.user = {
-      id: normalizedUserId,
+      _id: normalizedUserId,
       email: decoded.email,
       role: decoded.role || 'User',
     };

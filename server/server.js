@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -15,6 +16,17 @@ import userRoutes from './routes/userRoutes.js';
 dotenv.config();
 const app = express();
 
+
+// Rate limiter (100 requests per 15 minutes per IP)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+app.use(limiter);
+
 // Middlewares
 app.use(helmet());
 app.use(morgan('dev'));
@@ -27,6 +39,9 @@ app.use(cors({ origin: allowedOrigin, credentials: true }));
 connectDB();
 
 // Routes
+app.get('/', async (req,res)=>{
+  return res.status(200).json({message: "Server is working fine!"})
+})
 
 // User-facing routes
 app.use('/api/venues', venueRoutes);
