@@ -78,8 +78,8 @@ export default function Page() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((r) => (
-                <TableRow key={r.name}>
+              {data.map((r, i) => (
+                <TableRow key={r._id || r.id || r.name + i}>
                   <TableCell>{r.name}</TableCell>
                   <TableCell>{r.owner}</TableCell>
                   <TableCell>{r.sports}</TableCell>

@@ -20,7 +20,7 @@ export default function AppHeader() {
     { href: "/categories", label: "Categories" },
     { href: "/help", label: "Help" },
     // Admin/Owner portals
-    { href: "/admin", label: "Admin" },
+    { href: "/admin/login", label: "Admin" },
     { href: "/owner", label: "Owner" },
   ]
 

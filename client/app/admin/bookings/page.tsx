@@ -30,7 +30,7 @@ export default function Page() {
       })
   }, [])
 
-  const rows = bookings
+  const rows = Array.isArray(bookings) ? bookings : []
 
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4">
@@ -59,30 +59,38 @@ export default function Page() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>{r.id}</TableCell>
-                  <TableCell>{r.venue}</TableCell>
-                  <TableCell>{r.court}</TableCell>
-                  <TableCell>{r.user}</TableCell>
-                  <TableCell>
-                    {r.date} &middot; {r.time}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        r.status === "Confirmed"
-                          ? "bg-emerald-600 hover:bg-emerald-700"
-                          : r.status === "Pending"
-                            ? "bg-zinc-600 hover:bg-zinc-700"
-                            : "bg-red-600 hover:bg-red-700"
-                      }
-                    >
-                      {r.status}
-                    </Badge>
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No bookings found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                rows.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>{r.id}</TableCell>
+                    <TableCell>{r.venue}</TableCell>
+                    <TableCell>{r.court}</TableCell>
+                    <TableCell>{r.user}</TableCell>
+                    <TableCell>
+                      {r.date} &middot; {r.time}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          r.status === "Confirmed"
+                            ? "bg-emerald-600 hover:bg-emerald-700"
+                            : r.status === "Pending"
+                              ? "bg-zinc-600 hover:bg-zinc-700"
+                              : "bg-red-600 hover:bg-red-700"
+                        }
+                      >
+                        {r.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
