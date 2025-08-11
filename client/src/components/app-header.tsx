@@ -13,15 +13,14 @@ export default function AppHeader() {
   const pathname = usePathname()
   const [city, setCity] = useState("San Jose")
   const nav = [
-    { href: "/", label: "Home" },
-    { href: "/venues", label: "Venues" },
-    { href: "/bookings", label: "Bookings" },
-    { href: "/profile", label: "Profile" },
-    { href: "/categories", label: "Categories" },
-    { href: "/help", label: "Help" },
-    // Admin/Owner portals
-    { href: "/admin", label: "Admin" },
-    { href: "/owner", label: "Owner" },
+    { href: "/dashboard", label: "Home" },
+    { href: "/dashboard/venues", label: "Venues" },
+    { href: "/dashboard/bookings", label: "Bookings" },
+    { href: "/dashboard/profile", label: "Profile" },
+    { href: "/dashboard/categories", label: "Categories" },
+    { href: "/dashboard/help", label: "Help" },
+    { href: "/dashboard/admin", label: "Admin" },
+    { href: "/dashboard/owner", label: "Owner" },
   ]
 
   return (
@@ -87,7 +86,7 @@ export default function AppHeader() {
           <div className="ml-auto flex items-center gap-2 md:ml-4">
             <ThemeToggle />
             <Button asChild size="sm" variant="outline" className="gap-1 bg-transparent">
-              <Link href="/bookings">
+              <Link href="/dashboard/bookings">
                 <CalendarDays className="h-4 w-4" />
                 <span>My bookings</span>
               </Link>
