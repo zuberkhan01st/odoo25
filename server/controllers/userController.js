@@ -4,6 +4,11 @@ import User from '../models/User.js';
 import Venue from '../models/Venue.js';
 import Court from '../models/Court.js';
 
+//Fetching profile
+
+
+
+
 //Getting courts
 export const getAllCourts = async (req,res)=>{
     try{

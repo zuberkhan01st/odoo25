@@ -10,6 +10,7 @@ import venueRoutes from './routes/venueRoutes.js';
 import courtRoutes from './routes/courtRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/courts', courtRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/user', userRoutes);
 
 // Health
 app.get('/health', (req, res) => res.json({ ok: true }));
