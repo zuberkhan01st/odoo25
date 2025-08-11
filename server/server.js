@@ -37,7 +37,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+app.use(cors());
 
 // DB
 connectDB();
