@@ -7,27 +7,71 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 
+// Add types for location and coordinates
+type Coordinates = {
+  lat?: number;
+  lng?: number;
+};
+
+type Location = {
+  city?: string;
+  area?: string;
+  coordinates?: Coordinates;
+};
+
+type UserStateType = {
+  email: string;
+  password: string;
+  name: string;
+  password_confirmation: string;
+  avatar?: string;
+  password_reset_token?: string;
+  magic_link_token?: string;
+  magic_link_sent_at?: string;
+  skillLevel?: "Beginner" | "Intermediate" | "Advanced";
+  preferredPlayTimes?: string[];
+  favoriteSports?: string[];
+  location?: Location;
+};
+
+type registerErrorType = {
+  [key: string]: string;
+};
+
 export default function SignUp() {
   const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [userState, setUserState] = useState({
+  const [userState, setUserState] = useState<UserStateType>({
     email: "",
     password: "",
     name: "",
     password_confirmation: "",
+    avatar: "",
+    password_reset_token: "",
+    magic_link_token: "",
+    magic_link_sent_at: "",
+    skillLevel: "Beginner",
+    preferredPlayTimes: [],
+    favoriteSports: [],
+    location: {
+      city: "",
+      area: "",
+      coordinates: {
+        lat: undefined,
+        lng: undefined,
+      },
+    },
   });
 
   const [errors, setError] = useState<registerErrorType>({});
 
   const submitForm = async () => {
     setLoading(true);
-    console.log("The payload is", userState);
     axios
       .post("/api/auth/register", userState)
       .then((res) => {
         setLoading(false);
-        console.log("The response is", res.data);
         const response = res.data;
         if (response.status == 200) {
           router.push(`/login?message=${response.msg}`);
@@ -37,42 +81,35 @@ export default function SignUp() {
           setError({});
         }
       })
-      .catch((err) => console.log("The error is", err));
+      .catch((err) => {
+        setLoading(false);
+        console.log("The error is", err);
+      });
   };
 
-  // * Github signin
   const githubSignIn = () => {
-    signIn("github", {
-      callbackUrl: "/",
-    });
+    signIn("github", { callbackUrl: "/" });
   };
 
-  // * Google login
   const googleLogin = async () => {
-    await signIn("google", {
-      callbackUrl: "/",
-      redirect: true,
-    });
+    await signIn("google", { callbackUrl: "/", redirect: true });
+  };
+
+  // Helper for array fields
+  const handleArrayChange = (
+    field: "preferredPlayTimes" | "favoriteSports",
+    value: string,
+    idx: number
+  ) => {
+    const arr = [...(userState[field] || [])];
+    arr[idx] = value;
+    setUserState({ ...userState, [field]: arr });
   };
 
   return (
     <section>
       <div className="grid grid-cols-1 lg:grid-cols-2 h-screen">
-        <div className="relative flex items-end px-4 pb-10 pt-60 sm:px-6 sm:pb-16 md:justify-center lg:px-8 lg:pb-24">
-          <div className="absolute inset-0">
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-          <div className="relative">
-            <div className="w-full max-w-xl xl:mx-auto xl:w-full xl:max-w-xl xl:pr-24">
-              <h3 className="text-4xl font-bold text-white">
-                Next js Authentication process
-              </h3>
-              <h2 className="text-white text-xl font-semibold mt-10">
-                Production label Authentication with validations
-              </h2>
-            </div>
-          </div>
-        </div>
+        {/* ...existing left side code... */}
         <div className="flex items-center justify-center px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
           <div className="xl:mx-auto xl:w-full xl:max-w-sm 2xl:max-w-md">
             <h2 className="text-3xl font-bold leading-tight text-black sm:text-4xl">
@@ -90,6 +127,7 @@ export default function SignUp() {
             </p>
             <form action="#" method="POST" className="mt-8">
               <div className="space-y-5">
+                {/* Name */}
                 <div>
                   <label
                     htmlFor="name"
@@ -99,19 +137,21 @@ export default function SignUp() {
                   </label>
                   <div className="mt-2">
                     <input
-                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
                       type="text"
                       placeholder="Full Name"
                       id="name"
+                      value={userState.name}
                       onChange={(e) =>
                         setUserState({ ...userState, name: e.target.value })
                       }
-                    ></input>
+                    />
                     <span className="text-red-500 font-bold">
                       {errors?.name}
                     </span>
                   </div>
                 </div>
+                {/* Email */}
                 <div>
                   <label
                     htmlFor="email"
@@ -121,71 +161,318 @@ export default function SignUp() {
                   </label>
                   <div className="mt-2">
                     <input
-                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
                       type="email"
                       placeholder="Email"
                       id="email"
+                      value={userState.email}
                       onChange={(e) =>
                         setUserState({ ...userState, email: e.target.value })
                       }
-                    ></input>
+                    />
                     <span className="text-red-500 font-bold">
                       {errors?.email}
                     </span>
                   </div>
                 </div>
+                {/* Password */}
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="password"
-                      className="text-base font-medium text-gray-900"
-                    >
-                      Password
-                    </label>
-                  </div>
+                  <label
+                    htmlFor="password"
+                    className="text-base font-medium text-gray-900"
+                  >
+                    Password
+                  </label>
                   <div className="mt-2">
                     <input
-                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
                       type="password"
                       placeholder="Password"
                       id="password"
+                      value={userState.password}
                       onChange={(e) =>
                         setUserState({ ...userState, password: e.target.value })
                       }
-                    ></input>
+                    />
                     <span className="text-red-500 font-bold">
                       {errors?.password}
                     </span>
                   </div>
                 </div>
+                {/* Confirm Password */}
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="password"
-                      className="text-base font-medium text-gray-900"
-                    >
-                      Confirm Password
-                    </label>
-                  </div>
+                  <label
+                    htmlFor="password_confirmation"
+                    className="text-base font-medium text-gray-900"
+                  >
+                    Confirm Password
+                  </label>
                   <div className="mt-2">
                     <input
-                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
                       type="password"
                       placeholder="Confirm Password"
                       id="password_confirmation"
+                      value={userState.password_confirmation}
                       onChange={(e) =>
                         setUserState({
                           ...userState,
                           password_confirmation: e.target.value,
                         })
                       }
-                    ></input>
+                    />
                   </div>
                 </div>
+                {/* Avatar */}
+                <div>
+                  <label
+                    htmlFor="avatar"
+                    className="text-base font-medium text-gray-900"
+                  >
+                    Avatar URL
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
+                      type="text"
+                      placeholder="Avatar URL"
+                      id="avatar"
+                      value={userState.avatar}
+                      onChange={(e) =>
+                        setUserState({ ...userState, avatar: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                {/* Password Reset Token */}
+                <div>
+                  <label
+                    htmlFor="password_reset_token"
+                    className="text-base font-medium text-gray-900"
+                  >
+                    Password Reset Token
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
+                      type="text"
+                      placeholder="Password Reset Token"
+                      id="password_reset_token"
+                      value={userState.password_reset_token}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          password_reset_token: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                {/* Magic Link Token */}
+                <div>
+                  <label
+                    htmlFor="magic_link_token"
+                    className="text-base font-medium text-gray-900"
+                  >
+                    Magic Link Token
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
+                      type="text"
+                      placeholder="Magic Link Token"
+                      id="magic_link_token"
+                      value={userState.magic_link_token}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          magic_link_token: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                {/* Magic Link Sent At */}
+                <div>
+                  <label
+                    htmlFor="magic_link_sent_at"
+                    className="text-base font-medium text-gray-900"
+                  >
+                    Magic Link Sent At
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
+                      type="datetime-local"
+                      id="magic_link_sent_at"
+                      value={userState.magic_link_sent_at}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          magic_link_sent_at: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                {/* Skill Level */}
+                <div>
+                  <label
+                    htmlFor="skillLevel"
+                    className="text-base font-medium text-gray-900"
+                  >
+                    Skill Level
+                  </label>
+                  <div className="mt-2">
+                    <select
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm"
+                      id="skillLevel"
+                      value={userState.skillLevel}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          skillLevel: e.target
+                            .value as UserStateType["skillLevel"],
+                        })
+                      }
+                    >
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                    </select>
+                  </div>
+                </div>
+                {/* Preferred Play Times */}
+                <div>
+                  <label className="text-base font-medium text-gray-900">
+                    Preferred Play Times
+                  </label>
+                  <div className="mt-2 space-y-2">
+                    {[0, 1, 2].map((idx) => (
+                      <input
+                        key={idx}
+                        className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm mb-1"
+                        type="text"
+                        placeholder={`Play Time ${idx + 1}`}
+                        value={userState.preferredPlayTimes?.[idx] || ""}
+                        onChange={(e) =>
+                          handleArrayChange(
+                            "preferredPlayTimes",
+                            e.target.value,
+                            idx
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+                {/* Favorite Sports */}
+                <div>
+                  <label className="text-base font-medium text-gray-900">
+                    Favorite Sports
+                  </label>
+                  <div className="mt-2 space-y-2">
+                    {[0, 1, 2].map((idx) => (
+                      <input
+                        key={idx}
+                        className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm mb-1"
+                        type="text"
+                        placeholder={`Sport ${idx + 1}`}
+                        value={userState.favoriteSports?.[idx] || ""}
+                        onChange={(e) =>
+                          handleArrayChange(
+                            "favoriteSports",
+                            e.target.value,
+                            idx
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+                {/* Location */}
+                <div>
+                  <label className="text-base font-medium text-gray-900">
+                    Location
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm mb-1"
+                      type="text"
+                      placeholder="City"
+                      value={userState.location?.city || ""}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          location: {
+                            ...userState.location,
+                            city: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm mb-1"
+                      type="text"
+                      placeholder="Area"
+                      value={userState.location?.area || ""}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          location: {
+                            ...userState.location,
+                            area: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm mb-1"
+                      type="number"
+                      placeholder="Latitude"
+                      value={userState.location?.coordinates?.lat ?? ""}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          location: {
+                            ...userState.location,
+                            coordinates: {
+                              ...userState.location?.coordinates,
+                              lat: e.target.value
+                                ? Number(e.target.value)
+                                : undefined,
+                            },
+                          },
+                        })
+                      }
+                    />
+                    <input
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm mb-1"
+                      type="number"
+                      placeholder="Longitude"
+                      value={userState.location?.coordinates?.lng ?? ""}
+                      onChange={(e) =>
+                        setUserState({
+                          ...userState,
+                          location: {
+                            ...userState.location,
+                            coordinates: {
+                              ...userState.location?.coordinates,
+                              lng: e.target.value
+                                ? Number(e.target.value)
+                                : undefined,
+                            },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                {/* Submit Button */}
                 <div>
                   <button
                     type="button"
-                    className={`inline-flex w-full items-center justify-center rounded-md  px-3.5 py-2.5 font-semibold leading-7 text-white hover:bg-black/80 ${
+                    className={`inline-flex w-full items-center justify-center rounded-md px-3.5 py-2.5 font-semibold leading-7 text-white hover:bg-black/80 ${
                       loading ? "bg-gray-700" : "bg-black"
                     }`}
                     onClick={submitForm}
@@ -197,6 +484,7 @@ export default function SignUp() {
               </div>
             </form>
             <p className="text-center my-3">-- OR --</p>
+            {/* ...existing social login buttons... */}
             <div className="space-y-3">
               <button
                 type="button"
@@ -215,16 +503,11 @@ export default function SignUp() {
                 </span>
                 Sign in with Github
               </button>
-            </div>
-
-            {/* Google Login Button */}
-            <div className="space-y-3 mt-3">
               <button
                 type="button"
                 className="relative inline-flex w-full items-center justify-center rounded-md border border-gray-400 bg-white px-3.5 py-2.5 font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:text-black focus:bg-gray-100 focus:text-black focus:outline-none"
                 onClick={googleLogin}
               >
-                <span className="mr-2 inline-block"></span>
                 <Image
                   src="/google_icon.png"
                   height={30}
