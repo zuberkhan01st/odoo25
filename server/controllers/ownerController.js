@@ -1,10 +1,78 @@
+// Add multiple courts to a venue
+
 import User from '../models/User.js';
 import Owner from '../models/Owner.js';
 import Venue from '../models/Venue.js';
 import Court from '../models/Court.js';
 import Booking from '../models/Booking.js';
 
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+// Owner Signup
+export const ownerSignup = async (req, res) => {
+    try {
+        const { name, email, password, phone, avatar } = req.body;
+        if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password are required.' });
+        const existing = await Owner.findOne({ email });
+        if (existing) return res.status(400).json({ error: 'Email already registered.' });
+        const hashed = await bcrypt.hash(password, 10);
+        const owner = new Owner({ name, email, password: hashed, phone, avatar });
+        await owner.save();
+        const token = jwt.sign({ id: owner._id, email: owner.email, role: 'owner' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        res.status(201).json({ token, owner: { id: owner._id, name: owner.name, email: owner.email, phone: owner.phone, avatar: owner.avatar } });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
 
+export const addMultipleCourts = async (req, res) => {
+    try {
+        const { venueId, courts } = req.body;
+        if (!venueId || !Array.isArray(courts) || courts.length === 0) {
+            return res.status(400).json({ error: 'venueId and courts array are required.' });
+        }
+        // Ensure the venue belongs to the owner
+        const venue = await Venue.findOne({ _id: venueId, owner: req.user._id });
+        if (!venue) return res.status(404).json({ error: 'Venue not found or not owned by you.' });
+        // Create all courts
+        const createdCourts = await Court.insertMany(
+            courts.map(court => ({ ...court, venue: venueId }))
+        );
+        res.status(201).json({ message: 'Courts added successfully', courts: createdCourts });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+// Add Venue and reference it in Owner's venues array
+export const addVenue = async (req, res) => {
+    try {
+        const ownerId = req.user._id;
+        const venue = new Venue({ ...req.body, owner: ownerId });
+        await venue.save();
+        // Add venue reference to owner's venues array
+        await Owner.findByIdAndUpdate(ownerId, { $push: { venues: venue._id } });
+        res.status(201).json(venue);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+// Owner Login
+export const ownerLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
+        const owner = await Owner.findOne({ email }).select('+password');
+        if (!owner) return res.status(400).json({ error: 'Invalid credentials.' });
+        const match = await bcrypt.compare(password, owner.password);
+        if (!match) return res.status(400).json({ error: 'Invalid credentials.' });
+        const token = jwt.sign({ id: owner._id, email: owner.email, role: 'owner' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        res.json({ token, owner: { id: owner._id, name: owner.name, email: owner.email, phone: owner.phone, avatar: owner.avatar } });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
 // Owner Dashboard KPIs
 export const getDashboardKPIs = async (req, res) => {
     try {
@@ -52,7 +120,7 @@ export const getDashboardKPIs = async (req, res) => {
 // Facility Management
 export const addFacility = async (req, res) => {
     try {
-        const ownerId = req.user.id;
+        const ownerId = req.user._id;
         const venue = new Venue({ ...req.body, owner: ownerId });
         await venue.save();
         res.status(201).json(venue);
@@ -75,7 +143,7 @@ export const updateFacility = async (req, res) => {
 export const addCourt = async (req, res) => {
     try {
         const { venueId } = req.body;
-        const venue = await Venue.findOne({ _id: venueId, owner: req.user.id });
+        const venue = await Venue.findOne({ _id: venueId, owner: req.user._id });
         if (!venue) return res.status(404).json({ error: 'Venue not found' });
         const court = new Court({ ...req.body, venue: venueId });
         await court.save();

@@ -1,3 +1,37 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+// Admin Signup
+export const adminSignup = async (req, res) => {
+	try {
+		const { name, email, password, phone, avatar } = req.body;
+		if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password are required.' });
+		const existing = await Admin.findOne({ email });
+		if (existing) return res.status(400).json({ error: 'Email already registered.' });
+		const hashed = await bcrypt.hash(password, 10);
+		const admin = new Admin({ name, email, password: hashed, phone, avatar });
+		await admin.save();
+		const token = jwt.sign({ id: admin._id, email: admin.email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+		res.status(201).json({ token, admin: { id: admin._id, name: admin.name, email: admin.email, phone: admin.phone, avatar: admin.avatar } });
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
+};
+
+// Admin Login
+export const adminLogin = async (req, res) => {
+	try {
+		const { email, password } = req.body;
+		if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
+		const admin = await Admin.findOne({ email }).select('+password');
+		if (!admin) return res.status(400).json({ error: 'Invalid credentials.' });
+		const match = await bcrypt.compare(password, admin.password);
+		if (!match) return res.status(400).json({ error: 'Invalid credentials.' });
+		const token = jwt.sign({ id: admin._id, email: admin.email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+		res.json({ token, admin: { id: admin._id, name: admin.name, email: admin.email, phone: admin.phone, avatar: admin.avatar } });
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
+};
 import User from '../models/User.js';
 import Owner from '../models/Owner.js';
 import Venue from '../models/Venue.js';
