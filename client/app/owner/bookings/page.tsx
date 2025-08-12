@@ -4,17 +4,44 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useEffect, useState } from "react"
 
-const rows = Array.from({ length: 12 }).map((_, i) => ({
-  id: `OBK-${1200 + i}`,
-  venue: ["SRR Badminton", "Westside Tennis", "Community Football"][i % 3],
-  user: `user${i}@example.com`,
-  date: `2025-08-${10 + (i % 18)}`,
-  time: ["6:00 PM", "7:30 PM", "8:00 AM"][i % 3],
-  status: ["Confirmed", "Completed", "Cancelled"][i % 3],
-}))
+interface Booking {
+  id: string | number
+  venue: string
+  user: string
+  date: string
+  time: string
+  status: string
+}
 
 export default function Page() {
+  const [rows, setRows] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    async function fetchBookings() {
+      setLoading(true)
+      setError("")
+      try {
+        const res = await fetch("http://localhost:5000/api/owner/bookings", {
+          headers: {
+            Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("ownerToken") : ""}`,
+          },
+        })
+        if (!res.ok) throw new Error("Failed to fetch bookings")
+        const data = await res.json()
+        setRows(data.bookings || [])
+      } catch (e) {
+        setError((e as Error).message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBookings()
+  }, [])
+
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
       <div className="flex gap-2">
