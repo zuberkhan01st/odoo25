@@ -14,7 +14,7 @@ export default function Page() {
     { title: "Active Venues", value: "-", icon: Building2 },
     { title: "Pending Requests", value: "-", icon: Plus },
   ])
-  const [days, setDays] = useState([])
+  const [days, setDays] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -30,7 +30,7 @@ export default function Page() {
         const data = await res.json()
         setKpis([
           { title: "Total Bookings", value: data.totalBookings, icon: ClipboardList },
-          { title: "Revenue (30d)", value: `$${data.revenue30d || 0}` , icon: DollarSign },
+          { title: "Revenue (30d)", value: `$${data.revenue30d || 0}`, icon: DollarSign },
           { title: "Active Venues", value: data.activeVenues, icon: Building2 },
           { title: "Pending Requests", value: data.pendingRequests, icon: Plus },
         ])
@@ -45,8 +45,14 @@ export default function Page() {
   }, [])
 
   return (
-    <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col gap-6"
+    >
       {error && <div className="text-red-500">{error}</div>}
+
+      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         {kpis.map((k, idx) => (
           <motion.div
@@ -66,6 +72,7 @@ export default function Page() {
         ))}
       </div>
 
+      {/* Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Bookings (last 30 days)</CardTitle>
@@ -90,6 +97,7 @@ export default function Page() {
         </CardContent>
       </Card>
 
+      {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3">
         {["Add Venue", "View Bookings", "Manage Courts"].map((a) => (
           <Card key={a} className="group overflow-hidden transition">
