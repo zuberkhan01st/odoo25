@@ -23,9 +23,9 @@ import { Button } from "@/components/ui/button"
 export function OwnerShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <div className="min-h-svh">
+      <div className="flex min-h-screen">
         <OwnerSidebar />
-        <SidebarInset>
+        <SidebarInset className="flex flex-col flex-1">
           <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -37,7 +37,7 @@ export function OwnerShell({ children }: { children: React.ReactNode }) {
               </Link>
             </Button>
           </header>
-          <div className="p-4">{children}</div>
+          <main className="flex-1 p-4">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>
