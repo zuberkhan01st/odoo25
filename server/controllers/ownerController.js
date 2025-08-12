@@ -1,11 +1,8 @@
-// Add multiple courts to a venue
-
 import User from '../models/User.js';
 import Owner from '../models/Owner.js';
 import Venue from '../models/Venue.js';
 import Court from '../models/Court.js';
 import Booking from '../models/Booking.js';
-
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 // Owner Signup
@@ -117,6 +114,34 @@ export const getDashboardKPIs = async (req, res) => {
     }
 };
 
+export const changeOwnerPassword = async (req, res) => {
+    try {
+        const ownerId = req.user._id;
+        const { oldPassword, newPassword } = req.body;
+        if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Old and new password required.' });
+        const owner = await Owner.findById(ownerId).select('+password');
+        if (!owner) return res.status(404).json({ error: 'Owner not found' });
+        const match = await bcrypt.compare(oldPassword, owner.password);
+        if (!match) return res.status(400).json({ error: 'Old password is incorrect.' });
+        owner.password = await bcrypt.hash(newPassword, 10);
+        await owner.save();
+        res.json({ message: 'Password changed successfully.' });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+export const getFacilities = async (req, res) => {
+    try {
+        // Only return venues owned by the logged-in owner
+        const ownerId = req.user._id || req.user.id;
+        const facilities = await Venue.find({ owner: ownerId });
+        res.json({ facilities });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
 // Facility Management
 export const addFacility = async (req, res) => {
     try {
@@ -214,7 +239,7 @@ export const getOwnerBookings = async (req, res) => {
 // Owner Profile
 export const getProfile = async (req, res) => {
     try {
-        const owner = await Owner.findById(req.user.id);
+        const owner = await Owner.findById(req.user._id);
         if (!owner) return res.status(404).json({ error: 'Owner not found' });
         res.json(owner);
     } catch (err) {

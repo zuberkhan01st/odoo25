@@ -1,3 +1,4 @@
+
 import express from 'express';
 import { protect } from '../middlewares/authMiddleware.js';
 import {
@@ -15,7 +16,7 @@ import {
   getOwnerBookings,
   getProfile,
   updateProfile,
-  addMultipleCourts
+  addMultipleCourts, changeOwnerPassword, getFacilities
 } from '../controllers/ownerController.js';
 
 const router = express.Router();
@@ -28,6 +29,7 @@ router.post('/login', ownerLogin);
 router.get('/dashboard', protect, getDashboardKPIs);
 router.post('/venue', protect, addVenue); // Add venue and link to owner
 router.post('/facility', protect, addFacility); // (legacy/additional)
+router.get('/facility', protect, getFacilities);
 router.put('/facility/:id', protect, updateFacility);
 router.post('/court', protect, addCourt);
 router.post('/courts', protect, addMultipleCourts); // Add multiple courts under a venue
@@ -38,5 +40,7 @@ router.post('/court/block', protect, blockCourtSlots);
 router.get('/bookings', protect, getOwnerBookings);
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.post('/change-password',protect, changeOwnerPassword);
+
 
 export default router;

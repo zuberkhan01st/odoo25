@@ -28,6 +28,8 @@ export const protect = async (req, res, next) => {
       email: decoded.email,
       role: decoded.role || 'User',
     };
+
+    console.log("Everything is fine!")
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Token invalid or expired' });

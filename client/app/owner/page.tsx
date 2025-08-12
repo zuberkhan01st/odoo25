@@ -7,6 +7,11 @@ import { ResponsiveContainer, Line, LineChart, CartesianGrid, XAxis, YAxis } fro
 import { Plus, DollarSign, Building2, ClipboardList } from "lucide-react"
 import { useEffect, useState } from "react"
 
+function getAuthHeaders() {
+  const token = typeof window !== "undefined" ? localStorage.getItem("ownerToken") : null
+  return token ? { Authorization: `Bearer ${token}` } : undefined
+}
+
 export default function Page() {
   const [kpis, setKpis] = useState([
     { title: "Total Bookings", value: "-", icon: ClipboardList },
@@ -24,7 +29,9 @@ export default function Page() {
       setError("")
       try {
         const res = await fetch("http://localhost:5000/api/owner/dashboard", {
-          credentials: "include",
+          headers: {
+            ...getAuthHeaders(),
+          },
         })
         if (!res.ok) throw new Error("Failed to fetch dashboard KPIs")
         const data = await res.json()

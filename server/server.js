@@ -36,8 +36,10 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 
-const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
-app.use(cors());
+app.use(cors({
+  origin: true, // Reflect request origin
+  credentials: true
+}));
 
 // DB
 connectDB();
@@ -65,7 +67,7 @@ app.use('/api', aiRoutes);
 // Health
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-app.use('/', (req,res)=>{
+app.get('/', (req,res)=>{
   res.status(200).json({message:"Wo"})
 })
 
