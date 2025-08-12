@@ -24,6 +24,15 @@ export const adminSignup = async (req, res) => {
 	}
 };
 
+export const getAllFacilitiesAdmin = async (req, res) => {
+	try {
+		const venues = await Venue.find({}).populate('owner');
+		res.json(venues);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
+
 // Admin Login
 export const adminLogin = async (req, res) => {
 	try {

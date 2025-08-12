@@ -1,3 +1,4 @@
+import { getAllFacilitiesAdmin } from '../controllers/adminController.js';
 import express from 'express';
 import { protect } from '../middlewares/authMiddleware.js';
 import {
@@ -38,5 +39,6 @@ router.get('/reports', protect, getReports);
 router.post('/reports/:id/action', protect, takeActionOnReport);
 router.get('/profile', protect, getAdminProfile);
 router.put('/profile', protect, updateAdminProfile);
+router.get('/facilities/all', protect, getAllFacilitiesAdmin);
 
 export default router;
