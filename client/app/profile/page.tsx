@@ -27,7 +27,7 @@ export default function Page() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/user/profile", {
+    fetch("http://localhost:5000/api/owner/profile", {
       headers: {
         Authorization: `Bearer ${
           typeof window !== "undefined" ? localStorage.getItem("token") : ""

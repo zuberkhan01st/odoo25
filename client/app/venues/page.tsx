@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 
 interface Venue {
   _id: string;
@@ -22,6 +23,7 @@ interface Venue {
 
 export default function VenuesPage() {
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [upcoming, setUpcoming] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -29,8 +31,13 @@ export default function VenuesPage() {
     fetch("http://localhost:5000/api/venues/")
       .then((res) => res.json())
       .then((data) => {
-        // Defensive: ensure array, filter out null/undefined
-        setVenues(Array.isArray(data) ? data.filter(Boolean) : []);
+        if (Array.isArray(data)) {
+          setVenues(data.filter(v => v && v.approvalStatus === 'approved'));
+          setUpcoming(data.filter(v => v && v.approvalStatus === 'pending'));
+        } else {
+          setVenues([]);
+          setUpcoming([]);
+        }
         setLoading(false);
       })
       .catch((err) => {
@@ -39,15 +46,13 @@ export default function VenuesPage() {
       });
   }, []);
 
+
   return (
     <main className="p-8 min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <h1 className="text-3xl font-bold mb-8 text-center text-blue-900 drop-shadow">
-        Venues
-      </h1>
-      {loading && (
-        <div className="text-center text-lg">Loading venues...</div>
-      )}
+      <h1 className="text-3xl font-bold mb-8 text-center text-blue-900 drop-shadow">Venues</h1>
+      {loading && <div className="text-center text-lg">Loading venues...</div>}
       {error && <div className="text-red-500 text-center">{error}</div>}
+
       <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {venues.length === 0 ? (
           <div className="col-span-full text-center text-gray-500">No venues found.</div>
@@ -57,17 +62,11 @@ export default function VenuesPage() {
               key={venue._id}
               className="group border rounded-2xl p-4 shadow-lg bg-white transition-transform duration-200 hover:scale-105 hover:shadow-2xl hover:border-blue-400 cursor-pointer relative overflow-hidden"
             >
-              {venue.photos && venue.photos.length > 0 ? (
-                <img
-                  src={venue.photos[0]}
-                  alt={venue.name}
-                  className="w-full h-44 object-cover rounded-xl mb-3 group-hover:opacity-90 transition duration-200"
-                />
-              ) : (
-                <div className="w-full h-44 bg-gray-200 rounded-xl mb-3 flex items-center justify-center text-gray-400">
-                  No Image
-                </div>
-              )}
+              <img
+                src="/modern-research-facility.png"
+                alt={venue.name}
+                className="w-full h-44 object-cover rounded-xl mb-3 group-hover:opacity-90 transition duration-200"
+              />
               <h2 className="text-lg font-semibold mb-1 text-blue-800 truncate">
                 {venue.name}
               </h2>
@@ -129,6 +128,35 @@ export default function VenuesPage() {
           ))
         )}
       </div>
+
+      {/* Upcoming Ones Carousel */}
+      {upcoming.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-semibold mb-6 text-blue-800 text-center">Upcoming Ones</h2>
+          <Carousel className="relative max-w-4xl mx-auto">
+            <CarouselContent>
+              {upcoming.map((venue) => (
+                <CarouselItem key={venue._id} className="p-4">
+                  <div className="rounded-xl bg-white shadow-md p-8 flex flex-col items-center justify-center min-h-[220px]">
+                    <img
+                      src="/modern-research-facility.png"
+                      alt={venue.name}
+                      className="w-24 h-24 object-cover rounded-xl mb-2 border"
+                    />
+                    <span className="font-bold text-lg mb-1">{venue.name}</span>
+                    <span className="text-gray-500 capitalize">{venue.approvalStatus || 'pending'}</span>
+                    {venue.description && (
+                      <span className="text-xs text-gray-400 mt-2 text-center line-clamp-2">{venue.description}</span>
+                    )}
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      )}
     </main>
   );
 }
