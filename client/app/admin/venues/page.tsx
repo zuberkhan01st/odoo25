@@ -14,6 +14,23 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  const fetchVenues = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/facilities/pending", {
+        headers: {
+          Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("adminToken") : ""}`,
+        },
+      });
+      const data = await res.json();
+      setVenues(Array.isArray(data) ? data : (data.venues || []));
+    } catch {
+      setError("Failed to fetch venues");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
   fetch("http://localhost:5000/api/admin/facilities/pending", {
     headers: {
@@ -39,9 +56,9 @@ export default function Page() {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
       },
-    })
-    // Optionally, refetch venues or update state to reflect the change
-  }
+    });
+    await fetchVenues();
+  };
 
   const handleReject = async (id: string) => {
     await fetch(`http://localhost:5000/api/admin/facilities/${id}/reject`, {
@@ -49,9 +66,9 @@ export default function Page() {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
       },
-    })
-    // Optionally, refetch venues or update state to reflect the change
-  }
+    });
+    await fetchVenues();
+  };
 
   if (loading) return <div>Loading...</div>
   if (error) return <div>{error}</div>
@@ -81,9 +98,9 @@ export default function Page() {
               {data.map((r, i) => (
                 <TableRow key={r._id || r.id || r.name + i}>
                   <TableCell>{r.name}</TableCell>
-                  <TableCell>{r.owner}</TableCell>
-                  <TableCell>{r.sports}</TableCell>
-                  <TableCell>{r.location}</TableCell>
+                  <TableCell>{r.owner?.email || '-'}</TableCell>
+                  <TableCell>{Array.isArray(r.sports) && r.sports.length > 0 ? r.sports.join(', ') : '-'}</TableCell>
+                  <TableCell>{r.location && (r.location.city || r.location.area) ? `${r.location.city || ''}${r.location.city && r.location.area ? ', ' : ''}${r.location.area || ''}` : '-'}</TableCell>
                   <TableCell className="space-x-2 text-right">
                     <Dialog>
                       <DialogTrigger asChild>
@@ -96,7 +113,7 @@ export default function Page() {
                           <DialogTitle>{r.name}</DialogTitle>
                         </DialogHeader>
                         <div className="text-sm text-muted-foreground">
-                          Owner: {r.owner} • Sports: {r.sports} • Location: {r.location}
+                          Owner: {r.owner?.email || '-'} • Sports: {Array.isArray(r.sports) && r.sports.length > 0 ? r.sports.join(', ') : '-'} • Location: {r.location && (r.location.city || r.location.area) ? `${r.location.city || ''}${r.location.city && r.location.area ? ', ' : ''}${r.location.area || ''}` : '-' }
                         </div>
                       </DialogContent>
                     </Dialog>

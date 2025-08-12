@@ -10,6 +10,8 @@ import { useEffect, useState } from "react"
 
 export default function Page() {
   const [profile, setProfile] = useState<any>(null)
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -21,13 +23,15 @@ export default function Page() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setProfile(data)
-        setLoading(false)
+        setProfile(data);
+        setName(data.name || "");
+        setEmail(data.email || "");
+        setLoading(false);
       })
       .catch(() => {
-        setError("Failed to fetch profile")
-        setLoading(false)
-      })
+        setError("Failed to fetch profile");
+        setLoading(false);
+      });
   }, [])
 
   if (loading) return <div>Loading...</div>
@@ -42,11 +46,11 @@ export default function Page() {
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
             <Label>Name</Label>
-            <Input placeholder="Admin Name" value={profile.name} />
+            <Input placeholder="Admin Name" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="grid gap-2">
             <Label>Email</Label>
-            <Input type="email" placeholder="admin@example.com" value={profile.email} />
+            <Input type="email" placeholder="admin@example.com" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="grid gap-2 md:col-span-2">
             <Label>New password</Label>
