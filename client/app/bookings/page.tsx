@@ -7,30 +7,42 @@ import { Button } from "@/components/ui/button"
 import { CalendarIcon, Clock, MapPin } from "lucide-react"
 import BookingsCalendar from "@/components/bookings-calendar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { useEffect, useState } from "react"
+
+interface Booking {
+  _id: string
+  venue?: { name: string; location?: { city?: string } }
+  court?: { name?: string; sportType?: string }
+  date: string
+  timeSlot: string
+  status: string
+  price?: number
+  createdAt?: string
+}
 
 export default function Page() {
-  const items = [
-    {
-      id: "1",
-      name: "SRR Badminton Arena",
-      city: "Palo Alto",
-      date: "Aug 20, 2025",
-      iso: "2025-08-20",
-      time: "7:00 PM",
-      sport: "badminton",
-      status: "Upcoming",
-    },
-    {
-      id: "2",
-      name: "Westside Tennis",
-      city: "San Jose",
-      date: "Aug 14, 2025",
-      iso: "2025-08-14",
-      time: "6:00 PM",
-      sport: "tennis",
-      status: "Completed",
-    },
-  ]
+  const [items, setItems] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/bookings/my", {
+      headers: {
+        // If you use JWT auth, add token here
+        Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("token") : ""}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setItems(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Failed to fetch bookings")
+        setLoading(false)
+      })
+  }, [])
+
   return (
     <main>
       <AppHeader />
@@ -42,24 +54,27 @@ export default function Page() {
             <CardTitle className="text-base">Calendar</CardTitle>
           </CardHeader>
           <CardContent>
-            <BookingsCalendar bookedISO={items.map((i) => i.iso)} />
+            <BookingsCalendar bookedISO={items.map((i) => i.date)} />
             <div className="mt-2 text-xs text-muted-foreground">Dates with a green dot have at least one booking.</div>
           </CardContent>
         </Card>
 
+        {loading && <div>Loading bookings...</div>}
+        {error && <div className="text-red-500">{error}</div>}
         <div className="grid gap-3">
+          {items.length === 0 && !loading && <div className="text-gray-500">No bookings found.</div>}
           {items.map((b) => (
-            <Card key={b.id}>
+            <Card key={b._id}>
               <CardHeader className="flex-row items-center justify-between">
-                <CardTitle className="text-base">{b.name}</CardTitle>
-                <Badge variant={b.status === "Upcoming" ? "default" : "secondary"} className="capitalize">
-                  {b.status}
+                <CardTitle className="text-base">{b.venue?.name || "Unknown Venue"}</CardTitle>
+                <Badge variant={b.status === "confirmed" ? "default" : "secondary"} className="capitalize">
+                  {b.status || "Unknown"}
                 </Badge>
               </CardHeader>
               <CardContent className="grid gap-2 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="h-4 w-4" />
-                  {b.city}
+                  {b.venue?.location?.city || "-"}
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-2">
@@ -68,10 +83,10 @@ export default function Page() {
                   </span>
                   <span className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    {b.time}
+                    {b.timeSlot}
                   </span>
                 </div>
-                <div className="pt-2">
+                <div className="pt-2 flex gap-2">
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
@@ -85,11 +100,11 @@ export default function Page() {
                       <div className="grid gap-2 text-sm">
                         <div className="flex items-center justify-between">
                           <span>Facility</span>
-                          <span className="font-medium">{b.name}</span>
+                          <span className="font-medium">{b.venue?.name || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>City</span>
-                          <span className="font-medium">{b.city}</span>
+                          <span className="font-medium">{b.venue?.location?.city || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Date</span>
@@ -97,15 +112,38 @@ export default function Page() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Time</span>
-                          <span className="font-medium">{b.time}</span>
+                          <span className="font-medium">{b.timeSlot}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Total</span>
-                          <span className="font-semibold">$42.00</span>
+                          <span className="font-semibold">₹{b.price || 0}</span>
                         </div>
                       </div>
                     </DialogContent>
                   </Dialog>
+                  {b.status === "confirmed" && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`http://localhost:5000/api/bookings/${b._id}/cancel`, {
+                            method: "PATCH",
+                            headers: {
+                              Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("token") : ""}`,
+                            },
+                          })
+                          if (res.ok) {
+                            setItems((prev) => prev.filter((item) => item._id !== b._id))
+                          }
+                        } catch (err) {
+                          // Optionally show error
+                        }
+                      }}
+                    >
+                      Cancel Booking
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

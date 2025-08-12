@@ -5,8 +5,46 @@ import AppHeader from "@/components/app-header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
+
+interface UserProfile {
+  name: string
+  email: string
+  avatar?: string
+  skillLevel?: string
+  preferredPlayTimes?: string[]
+  favoriteSports?: string[]
+  location?: {
+    city?: string
+    area?: string
+    coordinates?: { lat: number; lng: number }
+  }
+}
 
 export default function Page() {
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/user/profile", {
+      headers: {
+        Authorization: `Bearer ${
+          typeof window !== "undefined" ? localStorage.getItem("token") : ""
+        }`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setProfile(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Failed to fetch profile")
+        setLoading(false)
+      })
+  }, [])
+
   return (
     <main>
       <AppHeader />
@@ -17,19 +55,52 @@ export default function Page() {
               <CardTitle className="text-base">My Profile</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-14 w-14">
-                  <AvatarImage src="/placeholder-user.jpg" alt="User avatar" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium">Jordan Doe</div>
-                  <div className="text-sm text-muted-foreground">jordan@example.com</div>
-                </div>
-              </div>
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
-                <Link href="/profile/edit">Edit profile</Link>
-              </Button>
+              {loading && <div>Loading profile...</div>}
+              {error && <div className="text-red-500">{error}</div>}
+              {profile && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-14 w-14">
+                      <AvatarImage
+                        src={profile.avatar || "/placeholder-user.jpg"}
+                        alt="User avatar"
+                      />
+                      <AvatarFallback>{profile.name?.[0] || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{profile.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {profile.email}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Skill Level:</span>{" "}
+                      {profile.skillLevel || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Preferred Play Times:</span>{" "}
+                      {profile.preferredPlayTimes?.join(", ") || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Favorite Sports:</span>{" "}
+                      {profile.favoriteSports?.join(", ") || "-"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Location:</span>{" "}
+                      {profile.location?.city || "-"},{" "}
+                      {profile.location?.area || "-"}
+                    </div>
+                  </div>
+                  <Button
+                    asChild
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Link href="/profile/edit">Edit profile</Link>
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -39,11 +110,6 @@ export default function Page() {
                 <CardTitle className="text-base">Upcoming bookings</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3">
-                {["SRR Badminton Arena - Aug 20, 7:00 PM", "Westside Tennis - Aug 26, 6:30 PM"].map((t) => (
-                  <div key={t} className="rounded-lg border p-3 text-sm">
-                    {t}
-                  </div>
-                ))}
                 <Button variant="outline" asChild>
                   <Link href="/bookings">View all</Link>
                 </Button>

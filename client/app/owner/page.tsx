@@ -5,19 +5,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ResponsiveContainer, Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { Plus, DollarSign, Building2, ClipboardList } from "lucide-react"
-
-const kpis = [
-  { title: "Total Bookings", value: "342", icon: ClipboardList },
-  { title: "Revenue (30d)", value: "$8,420", icon: DollarSign },
-  { title: "Active Venues", value: "3", icon: Building2 },
-  { title: "Pending Requests", value: "2", icon: Plus },
-]
-
-const days = Array.from({ length: 30 }).map((_, i) => ({ d: i + 1, v: 5 + Math.round(Math.random() * 10) }))
+import { useEffect, useState } from "react"
 
 export default function Page() {
+  const [kpis, setKpis] = useState([
+    { title: "Total Bookings", value: "-", icon: ClipboardList },
+    { title: "Revenue (30d)", value: "-", icon: DollarSign },
+    { title: "Active Venues", value: "-", icon: Building2 },
+    { title: "Pending Requests", value: "-", icon: Plus },
+  ])
+  const [days, setDays] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    async function fetchKPIs() {
+      setLoading(true)
+      setError("")
+      try {
+        const res = await fetch("http://localhost:5000/api/owner/dashboard", {
+          credentials: "include",
+        })
+        if (!res.ok) throw new Error("Failed to fetch dashboard KPIs")
+        const data = await res.json()
+        setKpis([
+          { title: "Total Bookings", value: data.totalBookings, icon: ClipboardList },
+          { title: "Revenue (30d)", value: `$${data.revenue30d || 0}` , icon: DollarSign },
+          { title: "Active Venues", value: data.activeVenues, icon: Building2 },
+          { title: "Pending Requests", value: data.pendingRequests, icon: Plus },
+        ])
+        setDays(data.bookingsPerDay || [])
+      } catch (e) {
+        setError((e as Error).message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchKPIs()
+  }, [])
+
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-6">
+      {error && <div className="text-red-500">{error}</div>}
       <div className="grid gap-4 md:grid-cols-4">
         {kpis.map((k, idx) => (
           <motion.div

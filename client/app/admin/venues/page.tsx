@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,16 +8,71 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
-const rows = Array.from({ length: 12 }).map((_, i) => ({
-  name: `Venue ${i + 1}`,
-  owner: `Owner ${i + 1}`,
-  sports: ["Tennis", "Badminton", "Football"][i % 3],
-  location: ["San Jose", "Palo Alto", "Sunnyvale"][i % 3],
-}))
-
 export default function Page() {
   const [q, setQ] = useState("")
-  const data = useMemo(() => rows.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())), [q])
+  const [venues, setVenues] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  const fetchVenues = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/facilities/pending", {
+        headers: {
+          Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("adminToken") : ""}`,
+        },
+      });
+      const data = await res.json();
+      setVenues(Array.isArray(data) ? data : (data.venues || []));
+    } catch {
+      setError("Failed to fetch venues");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+  fetch("http://localhost:5000/api/admin/facilities/pending", {
+    headers: {
+      Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("adminToken") : ""}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      setVenues(Array.isArray(data) ? data : (data.venues || []));
+      setLoading(false);
+    })
+    .catch(() => {
+      setError("Failed to fetch venues");
+      setLoading(false);
+    });
+}, []);
+
+  const data = useMemo(() => venues.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())), [q, venues])
+
+  const handleApprove = async (id: string) => {
+    await fetch(`http://localhost:5000/api/admin/facilities/${id}/approve`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
+    });
+    await fetchVenues();
+  };
+
+  const handleReject = async (id: string) => {
+    await fetch(`http://localhost:5000/api/admin/facilities/${id}/reject`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
+    });
+    await fetchVenues();
+  };
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>{error}</div>
+
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4">
       <div className="flex items-center gap-2">
@@ -40,12 +95,12 @@ export default function Page() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((r) => (
-                <TableRow key={r.name}>
+              {data.map((r, i) => (
+                <TableRow key={r._id || r.id || r.name + i}>
                   <TableCell>{r.name}</TableCell>
-                  <TableCell>{r.owner}</TableCell>
-                  <TableCell>{r.sports}</TableCell>
-                  <TableCell>{r.location}</TableCell>
+                  <TableCell>{r.owner?.email || '-'}</TableCell>
+                  <TableCell>{Array.isArray(r.sports) && r.sports.length > 0 ? r.sports.join(', ') : '-'}</TableCell>
+                  <TableCell>{r.location && (r.location.city || r.location.area) ? `${r.location.city || ''}${r.location.city && r.location.area ? ', ' : ''}${r.location.area || ''}` : '-'}</TableCell>
                   <TableCell className="space-x-2 text-right">
                     <Dialog>
                       <DialogTrigger asChild>
@@ -58,14 +113,18 @@ export default function Page() {
                           <DialogTitle>{r.name}</DialogTitle>
                         </DialogHeader>
                         <div className="text-sm text-muted-foreground">
-                          Owner: {r.owner} • Sports: {r.sports} • Location: {r.location}
+                          Owner: {r.owner?.email || '-'} • Sports: {Array.isArray(r.sports) && r.sports.length > 0 ? r.sports.join(', ') : '-'} • Location: {r.location && (r.location.city || r.location.area) ? `${r.location.city || ''}${r.location.city && r.location.area ? ', ' : ''}${r.location.area || ''}` : '-' }
                         </div>
                       </DialogContent>
                     </Dialog>
-                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => handleApprove(r._id)}
+                    >
                       Approve
                     </Button>
-                    <Button size="sm" variant="destructive">
+                    <Button size="sm" variant="destructive" onClick={() => handleReject(r._id)}>
                       Reject
                     </Button>
                   </TableCell>
